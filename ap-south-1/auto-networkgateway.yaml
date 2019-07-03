@@ -1,0 +1,85 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: create network gateway for private subnet
+        ec2_vpc_nat_gateway:
+          subnet_id: "{{ item.1.ngsubnet }}"
+          region: "{{ item.1.ngregion }}"
+          wait: yes
+          if_exist_do_not_create: true
+        register: create_natgw
+        with_subelements:
+          - "{{ natgateways }}"
+          - configure 
+
+      #- name: setfactsng
+      #  set_fact:
+      #    natgw_id: "{{ natgw_id | default({}) | combine({item.item.0.natgatewayname: item.nat_gateway_id}) }}"
+      #  loop: "{{create_natgw.results}}"
+
+      #- name: setfactng1
+      #  set_fact:
+      #    natactualid: "{{item.value}}"
+      #  with_dict:
+      #    - "{{ natgw_id }}"
+
+      #- name: Add tags with purge_tags=no
+      #  ec2_vpc_nat_gateway:
+      #    if_exist_do_not_create: 'yes'
+      #    purge_tags: 'no'
+      #    tags:
+      #      Name: "{{item.0.natgatewayname}}"
+      #    subnet_id: "{{ item.1.ngsubnet }}"
+      #    nat_gateway_id: "{{ natactualid }}"
+      #    register: vpc_nat_gateway_tagged
+      #  with_subelements:
+      #    - "{{ natgateways }}"
+      #    - configure
+
+      - name: debug natgw
+        debug:
+          msg: "{{create_natgw}}"
+
+      - name: setfacts natworkgwid
+        set_fact:
+          natgw_id: "{{ natgw_id | default({}) | combine({item.item.0.natgatewayname: item.nat_gateway_id}) }}"
+        loop: "{{create_natgw.results}}"
+
+      - name: setfactng1
+        set_fact:
+          natactualid: "{{item.value}}"
+        with_dict:
+          - "{{ natgw_id }}"
+
+      - name: debugnatgwid
+        debug:
+          msg: "{{natgw_id}}"
+
+      - name: copy all3.yaml to all4.yaml
+        copy:
+          src: /etc/ansible/ap-south-1/group_vars/all3.yaml
+          dest: /etc/ansible/ap-south-1/group_vars/all4.yaml
+
+      - name: replace natgatewayname with natgatewayid
+        replace:
+          path: /etc/ansible/ap-south-1/group_vars/all4.yaml
+          regexp: "{{item.key}}"
+          replace: "{{ item.value }}"
+        with_dict: "{{natgw_id}}"
+
+
+      - name: create route table for public subnets and add IGW to route
+        ec2_vpc_route_table:
+          vpc_id: "{{ item.1.ngrvpc }}"
+          region: "{{ item.1.ngrregion }}"
+          subnets: "{{ item.1.ngrsubnet }}"
+          routes:
+            - dest: 0.0.0.0/0
+              gateway_id: "{{ natactualid }}"
+        register: create_pubsub_ngw_route
+        with_subelements:
+          - "{{ ngw_routes }}"
+          - con
+               

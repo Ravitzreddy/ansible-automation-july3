@@ -1,0 +1,15 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: run aws cli to add routes to vpcs main route table
+        command: aws ec2 create-route --route-table-id "{{ item.1.ngrrouteid }}" --destination-cidr-block 0.0.0.0/0 --gateway-id "{{item.1.ngrgatewayid}}"
+        register: ngwroutes
+        with_subelements:
+          - "{{ngw_routes}}"
+          - con
+
+      - name: debugsngwroutes
+        debug:
+          msg: "{{ngwroutes}}"

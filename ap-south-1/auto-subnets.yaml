@@ -1,0 +1,70 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      # Create subnet for ap-south-1a AZ
+      - name: create subnets for az apsouth1a
+        ec2_vpc_subnet:
+          state: present
+          tags:
+            Name: "{{item.1.subtags}}"
+          vpc_id: "{{item.1.subvpcid}}"
+          region: "{{item.1.subreg}}"
+          cidr: "{{item.1.subcidr}}"
+          az: "{{item.1.subaz}}"
+          map_public: "{{item.1.sumap_public}}"
+          resource_tags:
+            Name: "{{item.0.subnetname}}"
+        register: create_subnets_apsouth1a
+        with_subelements:
+          - "{{subnetsapsouth1a}}"
+          - configs
+
+      # Create subnet for ap-south-1b AZ
+      - name: create subnets for az apsouth1b
+        ec2_vpc_subnet:
+          state: present
+          tags:
+            Name: "{{item.1.subtags}}"
+          vpc_id: "{{item.1.subvpcid}}"
+          region: "{{item.1.subreg}}"
+          cidr: "{{item.1.subcidr}}"
+          az: "{{item.1.subaz}}"
+          map_public: "{{item.1.sumap_public}}" 
+          resource_tags:
+            Name: "{{item.0.subnetname}}"
+        register: create_subnets_apsouth1b
+        with_subelements:
+          - "{{subnetsapsouth1b}}"
+          - configs
+ 
+      # set facts
+      - name: set facts of subnet id's
+        set_fact: 
+          subnet_ids: "{{ subnet_ids | default({}) | combine({ item.subnet.tags.Name: item.subnet.id })  }}"
+        with_items: 
+          - "{{create_subnets_apsouth1a.results}}"
+          - "{{create_subnets_apsouth1b.results}}"
+
+
+      # debug set facts
+      - name: debug set facts of subnets
+        debug:
+          msg: "{{subnet_ids}}"
+
+      # copy var file all2.yaml to all3.yaml
+      - name: copy var file all2.yaml to all3.yaml
+        copy:
+          src: /etc/ansible/ap-south-1/group_vars/all2.yaml
+          dest: /etc/ansible/ap-south-1/group_vars/all3.yaml
+          follow: yes
+
+      # replace function
+      - name: replace subnet names with subnet id's in var file all3.yaml
+        replace:
+          path: /etc/ansible/ap-south-1/group_vars/all3.yaml
+          regexp: "{{ item.key }}"
+          replace: "{{ item.value }}"
+        with_dict: "{{ subnet_ids }}"
+      

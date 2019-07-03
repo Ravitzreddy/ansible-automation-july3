@@ -1,0 +1,59 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    #vars:
+    #  vpcs:
+    #    - vpcname: VPC-A
+    #      configurations:
+    #        - vpccidr: 10.0.0.0/16
+    #          vpcregion: ap-south-1
+    #    - vpcname: VPC-B
+    #      configurations:
+    #        - vpccidr: 10.1.0.0/16
+    #          vpcregion: us-west-1
+    tasks:
+      - name: create vpc for "{{ item.vname }}"
+        ec2_vpc_net:
+          name: "{{ item.0.vpcname }}"
+          state: present
+          cidr_block: "{{ item.1.vpccidr }}"
+          region: "{{ item.1.vpcregion }}"
+        register: create_vpc
+        with_subelements:
+          - "{{vpcs}}"
+          - configurations
+
+      - name: "setfacts"
+        set_fact:
+          vpc_ids: "{{ vpc_ids | default({}) | combine({ item.vpc.tags.Name: item.vpc.id }) }}"
+        loop: "{{ create_vpc.results }}"
+
+
+      - name: debugsetfacts
+        debug:
+          msg: "{{ vpc_ids }}"
+
+      # Create Internet gateway to list of vpcs in vpc_ids
+      - name: create internetgateway
+        ec2_vpc_igw:
+          vpc_id: "{{ item.vpc.id }}"
+          region: "{{ item.invocation.module_args.region }}"
+          state: present
+          tags:
+            Name: "{{item.vpc.tags.Name}}-IGW"
+        register: create_vpcigw
+        loop: "{{ create_vpc.results }}"
+
+
+      # Display content to dict variables igws
+      - name: debugcreate_vpcigw
+        set_fact:
+          igw_ids: "{{ igw_ids | default({}) | combine({ item.tags.Name: item.gateway_id  }) }}"
+        loop: "{{ create_vpcigw.results }}"
+
+      # Display igw_ids
+      - name: debugigw_ids
+        debug:
+          msg: "{{ igw_ids }}"
+    

@@ -1,0 +1,8 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: describe aws ec2
+        command: aws ec2 describe-instances --region ap-south-1
+

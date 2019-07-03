@@ -1,0 +1,130 @@
+---
+  vpcs:
+    - vpcname: VPC-A
+      configurations:
+        - vpccidr: 10.0.0.0/16
+          vpcregion: ap-south-1
+          IGW: yes
+    - vpcname: VPC-B
+      configurations:
+        - vpccidr: 10.1.0.0/16
+          vpcregion: ap-south-1
+          IGW: yes
+  
+  subnetsapsouth1a:
+    - subnetname: SUB1-PUB-VPCA
+      configs:
+        - subcidr: 10.0.1.0/24
+          subaz: ap-south-1a
+          subreg: ap-south-1
+          subvpcid: VPC-A
+          subtags: publicsubnet-vpc1
+          sumap_public: yes
+    - subnetname: SUB2-PRI-VPCA
+      configs:
+        - subcidr: 10.0.2.0/24
+          subaz: ap-south-1a
+          subreg: ap-south-1
+          subvpcid: VPC-A
+          subtags: privatesubnet-vpc1
+          sumap_public: no
+    - subnetname: SUB3-PRI-VPCA
+      configs:
+        - subcidr: 10.0.3.0/24
+          subaz: ap-south-1a
+          subreg: ap-south-1
+          subvpcid: VPC-A
+          subtags: privatesubnet-vpc1
+          sumap_public: no
+    - subnetname: SUB4-PRI-VPCB
+      configs:
+        - subcidr: 10.1.1.0/24
+          subaz: ap-south-1a
+          subreg: ap-south-1
+          subvpcid: VPC-B
+          subtags: privatesubnet-vpc2
+          sumap_public: no
+    - subnetname: SUB6-PUB-VPCB
+      configs:
+        - subcidr: 10.1.2.0/24
+          subaz: ap-south-1a
+          subreg: ap-south-1
+          subvpcid: VPC-B
+          subtags: publicsubnet-vpc2
+          sumap_public: no
+        
+  subnetsapsouth1b:
+    - subnetname: SUB5-PUB-VPCA
+      configs:
+        - subcidr: 10.0.5.0/24
+          subaz: ap-south-1b
+          subreg: ap-south-1
+          subvpcid: VPC-A
+          subtags: publicsubnet-vpc1
+          sumap_public: yes
+
+    
+  igw_routes:
+    - routename: SUB1-PUBL-VPCA-IGW
+      confs:
+        - igrvpc: VPC-A
+          igrregion: ap-south-1
+          igrsubnet: SUB1-PUB-VPCA
+          igrgatewayid: vpc-a-IGW
+    - routename: SUB5-PUBL-VPCA-IGW
+      confs:
+        - igrvpc: VPC-A
+          igrregion: ap-south-1
+          igrsubnet: SUB5-PUB-VPCA
+          igrgatewayid: vpc-a-IGW
+    - routename: SUB6-PUBL-VPCB-IGW
+      confs:
+        - igrvpc: VPC-B
+          igrregion: ap-south-1
+          igrsubnet: SUB6-PUB-VPCB
+          igrgatewayid: vpc-b-IGW
+
+
+  # variables for nat gateway to DB subnet SUB3-PRI-VPCA
+  natgateways:
+    - natgatewayname: SUB3-PRIV-VPCA-NATGW
+      configure:
+        - ngsubnet: SUB1-PUB-VPCA
+          ngregion: ap-south-1
+    - natgatewayname: SUB4-PRIV-VPCB-NATGW
+      configure:
+        - ngsubnet: SUB6-PUB-VPCB
+          ngregion: ap-south-1
+    
+
+  # create route record to vpca main route table and associate subnet SUB3-PRI-VPCA
+  ngw_routes:
+    - routename: SUB3-PRI-VPC--A-NATROUTE
+      con:
+        - ngrvpc: VPC-A
+          ngrvpccidr: 10.0.0.0/16
+          ngrregion: ap-south-1
+          ngrsubnet: SUB3-PRI-VPCA
+          ngrgatewayid: SUB3-PRIV-VPCA-NATGW
+          ngrrouteid: SUB3-PRI-VPC--A-NATROUTE
+    - routename: SUB4-PRI-VPC--B-NATROUTE
+      con:
+        - ngrvpc: VPC-B
+          ngrvpccidr: 10.1.0.0/16
+          ngrregion: ap-south-1
+          ngrsubnet: SUB4-PRI-VPCB
+          ngrgatewayid: SUB4-PRIV-VPCB-NATGW
+          ngrrouteid: SUB4-PRI-VPC--B-NATROUTE
+
+  # create basic subnets that allow public to access web servers in vpc-a and vpc-b
+  create_webserver_sec_groups:
+    - secgrpname: webinst-vpca
+      configurations:
+        - secgrpdesc: sec grp for web servers for vpca
+          secvpcid: VPC-A
+          secregion: ap-south-1
+        - secgrpdesc: sec grp for web servers for vpcb
+          secvpcid: VPC-B
+          secregion: ap-south-1
+                  
+    

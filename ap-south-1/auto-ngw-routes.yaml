@@ -1,0 +1,23 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: create route record for nat instances
+        ec2_vpc_route_table:
+          vpc_id: "{{item.1.ngrvpc}}"
+          region: "{{item.1.ngrregion}}"
+          lookup: id
+          purge_subnets: false
+          route_table_id: "{{item.1.ngrrouteid}}"
+          tags:
+            Name: "{{item.0.routename}}"
+          subnets:
+            - "{{item.1.ngrsubnet}}"
+          routes:
+            - dest: 0.0.0.0/0
+              gateway_id: "{{item.1.ngrgatewayid}}"
+        with_subelements:
+          - "{{ngw_routes}}"
+          - con
+

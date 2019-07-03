@@ -1,0 +1,18 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: gether routetable facts
+        ec2_vpc_route_table_facts:
+          region: ap-south-1
+          filters:
+            vpc-id: "{{item.0.vpcname}}"
+            "association.main": "true"
+        register: mroutes
+        with_subelements:
+          - "{{vpcs}}"
+          - configurations
+      - name: debugmroutes
+        debug:
+          msg: "{{mroutes}}"  

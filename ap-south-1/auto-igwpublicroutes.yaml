@@ -1,0 +1,19 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: create route table for public subnets and add IGW to route 
+        ec2_vpc_route_table:
+          vpc_id: "{{ item.1.igrvpc }}"
+          region: "{{ item.1.igrregion }}"
+          subnets: "{{ item.1.igrsubnet }}"
+          routes:
+            - dest: 0.0.0.0/0
+              gateway_id: "{{ item.1.igrgatewayid }}"
+          tags:
+            Name: "{{ item.0.routename }}"
+        register: create_pubsub_igw_route
+        with_subelements:
+          - "{{ igw_routes }}"
+          - confs
