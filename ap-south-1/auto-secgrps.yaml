@@ -3,22 +3,21 @@
     connection: local
     become: true
     tasks:
-      - name: create webserver sec groups
-        ec2_group:
-          name: "{{item.0.secgrpname}}"
-          description: "{{item.1.secgrpdesc}}"
-          region: "{{item.1.secregion}}"
-          vpc_id: "{{item.1.secvpcid}}"
-          rules:
-            - proto: tcp
-              from_port: 80
-              to_port: 80
-              cidr_ip: 0.0.0.0/0
-            - proto: tcp
-              from_port: 22
-              to_port: 22
-              cidr_ip: 0.0.0.0/0
-        register: webservers_group             
+      - name: create instances
+        ec2:
+          key_name: "{{item.1.inskeyname}}"
+          instance_type: "{{item.1.instype}}"
+          image: "{{item.1.insimage}}"
+          region: "{{item.1.insregion}}"
+          group_id: "{{item.1.inssecgrp}}"
+          wait: yes
+          instance_tags: 
+            Name: "{{item.0.instname}}"
+          count: 1
+          count_tag:
+            application: webservers
+            vpc_subnet_id: "{{item.1.insvpcsubnetid}}"
+          register: ec2_inst  
         with_subelements:
-          - "{{create_webserver_sec_groups}}"
-          - configurations  
+          - "{{crt_inst}}"
+          - configs

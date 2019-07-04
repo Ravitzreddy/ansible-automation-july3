@@ -1,0 +1,44 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: create appserver sec groups
+        ec2_group:
+          name: "{{item.0.secgrpname}}"
+          description: "{{item.1.secgrpdesc}}"
+          region: "{{item.1.secregion}}"
+          vpc_id: "{{item.1.secvpcid}}"
+          rules:
+            - proto: tcp
+              from_port: 80
+              to_port: 80
+              cidr_ip: "{{item.1.sectarget1}}"
+            - proto: tcp
+              from_port: 80
+              to_port: 80
+              cidr_ip: "{{item.1.sectarget2}}"
+            - proto: tcp
+              from_port: 22
+              to_port: 22
+              cidr_ip: "{{item.1.sectarget1}}"
+            - proto: tcp
+              from_port: 22
+              to_port: 22
+              cidr_ip: "{{item.1.sectarget2}}"
+        register: appservers_group
+        with_subelements:
+          - "{{create_appserver_sec_groups}}"
+          - configurations
+
+
+      - name: set facts of appservers_group
+        set_fact:
+          apsouth1_appsecgrps: "{{ apsouth1_appsecgrps | default({}) | combine({item.group_name: item.group_id}) }}"
+        loop: "{{appservers_group.results}}"
+
+      - name: debugapsouth1_appsecgrps
+        debug:
+          msg: "{{item.key}} : {{item.value}}"
+        with_dict: "{{apsouth1_appsecgrps}}"
+

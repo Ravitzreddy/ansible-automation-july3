@@ -140,29 +140,29 @@
   
   # create instance
   crt_inst:
-    - instname: INST1-SUBPUB1-VPCA
+    - instname: ['i-0fd31e2bf52a4668b']
       configs:
         - inskeyname: myprimeadmkeypair
           instype: t2.micro
           insimage: ami-5b673c34
           insregion: ap-south-1
           inssecgrp: sg-0f5671e01e051ed99
-          instags: INSTANCESUBPUB1VPCA-INST1-SUBPUB1-VPCA
-          inspubiptag: INST1SUBPUB1VPCAPUBLICIP
-          inspriiptag: INST1SUBPUB1VPCAPRIVATEIP
+          instags: INSTANCESUBPUB1VPCA-['i-0fd31e2bf52a4668b']
+          inspubiptag: 13.233.224.132
+          inspriiptag: 10.0.1.88
           inscount: 1
           insvpcsubnetid: subnet-0eebf6a5c9e36c176
           insasspubip: yes
-    - instname: INST2-SUBPUB5-VPCA
+    - instname: ['i-0bc1f76bcd113cb4b']
       configs:
         - inskeyname: myprimeadmkeypair
           instype: t2.micro
           insimage: ami-5b673c34
           insregion: ap-south-1
           inssecgrp: sg-0f5671e01e051ed99
-          instags: INSTANCESUBPUB1VPCA-INST2-SUBPUB5-VPCA
-          inspubiptag: INST2SUBPUB1VPCAPUBLICIP
-          inspriiptag: INST2SUBPUB1VPCAPRIVATEIP
+          instags: INSTANCESUBPUB1VPCA-['i-0bc1f76bcd113cb4b']
+          inspubiptag: 13.126.52.112
+          inspriiptag: 10.0.5.65
           inscount: 1
           insvpcsubnetid: subnet-08d5bdca8ff68502c
           insasspubip: yes

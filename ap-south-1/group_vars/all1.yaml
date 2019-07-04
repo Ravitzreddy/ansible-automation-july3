@@ -123,8 +123,58 @@
         - secgrpdesc: sec grp for web servers for vpca
           secvpcid: VPC-A
           secregion: ap-south-1
+    - secgrpname: webinst-vpcb
+      configurations:
         - secgrpdesc: sec grp for web servers for vpcb
           secvpcid: VPC-B
           secregion: ap-south-1
-                  
+  # create keyair for ap-south-1 region
+  #createkeypair:
+  #  - kpname: apsouth1keypair1
+  #    cons:
+  #      - kpregion: ap-south-1
+  #  - kpname: apsouth1keypair2
+  #    cons: 
+  #      - kpregion: ap-south-1
+
+  
+  # create instance
+  crt_inst:
+    - instname: INST1-SUBPUB1-VPCA
+      configs:
+        - inskeyname: myprimeadmkeypair
+          instype: t2.micro
+          insimage: ami-5b673c34
+          insregion: ap-south-1
+          inssecgrp: webinst-vpca
+          instags: INSTANCESUBPUB1VPCA-INST1-SUBPUB1-VPCA
+          inspubiptag: INST1SUBPUB1VPCAPUBLICIP
+          inspriiptag: INST1SUBPUB1VPCAPRIVATEIP
+          inscount: 1
+          insvpcsubnetid: SUB1-PUB-VPCA
+          insasspubip: yes
+    - instname: INST2-SUBPUB5-VPCA
+      configs:
+        - inskeyname: myprimeadmkeypair
+          instype: t2.micro
+          insimage: ami-5b673c34
+          insregion: ap-south-1
+          inssecgrp: webinst-vpca
+          instags: INSTANCESUBPUB1VPCA-INST2-SUBPUB5-VPCA
+          inspubiptag: INST2SUBPUB1VPCAPUBLICIP
+          inspriiptag: INST2SUBPUB1VPCAPRIVATEIP
+          inscount: 1
+          insvpcsubnetid: SUB5-PUB-VPCA
+          insasspubip: yes
+     
+  # Create sec groups to app servers in vpca private subnets
+  create_appserver_sec_groups:
+    - secgrpname: appinst-vpca
+      configurations:
+        - secgrpdesc: sec grp for app servers for vpca
+          secvpcid: VPC-A
+          secregion: ap-south-1
+          sectarget1: INST1SUBPUB1VPCAPRIVATEIP
+          sectarget2: INST2SUBPUB1VPCAPRIVATEIP 
     
+ 

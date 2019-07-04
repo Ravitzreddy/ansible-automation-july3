@@ -1,0 +1,64 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: create instances
+        ec2:
+          key_name: "{{item.1.inskeyname}}"
+          instance_type: "{{item.1.instype}}"
+          image: "{{item.1.insimage}}"
+          region: "{{item.1.insregion}}"
+          group_id: "{{item.1.inssecgrp}}"
+          wait: yes
+          instance_tags: 
+            Name: "{{item.0.instname}}"
+            Publicip: "{{item.1.inspubiptag}}"
+            Privateip: "{{item.1.inspriiptag}}"
+          count: 1
+          count_tag:
+            application: webservers
+          vpc_subnet_id: "{{item.1.insvpcsubnetid}}"
+          state: present
+        register: ec2_inst  
+        with_subelements:
+          - "{{crt_inst}}"
+          - configs
+
+      - name: debug
+        debug:
+          msg: "{{ec2_inst}}"
+
+      - name: setfactsget public ipaddresses of instances into dict
+        set_fact: 
+          pubsubs_vpca_instances: "{{pubsubs_vpca_instances | default({}) | combine({item.invocation.module_args.instance_tags.Name: item.instance_ids}) }}"
+          pubsubs_vpca_pubips: "{{pubsubs_vpca_pubips | default({}) | combine({item.invocation.module_args.instance_tags.Publicip: item.instances[0].public_ip}) }}"
+          pubsubs_vpca_priips: "{{pubsubs_vpca_priips | default({}) | combine({item.invocation.module_args.instance_tags.Privateip: item.instances[0].private_ip}) }}"
+
+        loop: "{{ec2_inst.results}}"
+
+      - name: debug pubsubs_vpca_instances
+        debug:
+          msg: 
+            - "{{pubsubs_vpca_instances}}"
+            - "{{pubsubs_vpca_pubips}}"
+            - "{{pubsubs_vpca_priips}}"
+
+      # copy all4.yaml to all5.yaml to assign public instances parametres from facts
+      - name: copy all4yaml to all5yaml
+        copy:
+          src: /etc/ansible/ap-south-1/group_vars/all4.yaml
+          dest: /etc/ansible/ap-south-1/group_vars/all5.yaml
+      # replace the keys and values from loops
+      - name: replace the keys and values from loops
+        replace:
+          path: /etc/ansible/ap-south-1/group_vars/all5.yaml
+          regexp: "{{ item.key }}"
+          replace: "{{ item.value }}"
+        with_dict:
+          - "{{pubsubs_vpca_instances}}"
+          - "{{pubsubs_vpca_pubips}}"
+          - "{{pubsubs_vpca_priips}}"
+
+
+

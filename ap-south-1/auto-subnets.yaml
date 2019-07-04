@@ -53,6 +53,38 @@
         debug:
           msg: "{{subnet_ids}}"
 
+      - name: create webserver sec groups
+        ec2_group:
+          name: "{{item.0.secgrpname}}"
+          description: "{{item.1.secgrpdesc}}"
+          region: "{{item.1.secregion}}"
+          vpc_id: "{{item.1.secvpcid}}"
+          rules:
+            - proto: tcp
+              from_port: 80
+              to_port: 80
+              cidr_ip: 0.0.0.0/0
+            - proto: tcp
+              from_port: 22
+              to_port: 22
+              cidr_ip: 0.0.0.0/0
+        register: webservers_group
+        with_subelements:
+          - "{{create_webserver_sec_groups}}"
+          - configurations
+
+
+      - name: set facts of webservers_group
+        set_fact:
+          apsouth1_secgrps: "{{ apsouth1_secgrps | default({}) | combine({item.group_name: item.group_id}) }}"
+        loop: "{{webservers_group.results}}"
+
+      - name: debugapsouth1_secgrps
+        debug:
+          msg: "{{item.key}} : {{item.value}}"
+        with_dict: "{{apsouth1_secgrps}}"
+
+
       # copy var file all2.yaml to all3.yaml
       - name: copy var file all2.yaml to all3.yaml
         copy:
@@ -67,4 +99,12 @@
           regexp: "{{ item.key }}"
           replace: "{{ item.value }}"
         with_dict: "{{ subnet_ids }}"
+
+      # replace function
+      - name: replace webserv sec grp names with sec grp ids in var file all3.yaml
+        replace:
+          path: /etc/ansible/ap-south-1/group_vars/all3.yaml
+          regexp: "{{ item.key }}"
+          replace: "{{ item.value }}"
+        with_dict: "{{ apsouth1_secgrps }}"
       
