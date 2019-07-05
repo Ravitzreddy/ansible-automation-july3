@@ -1,0 +1,110 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      # Create subnet for ap-south-1a AZ
+      - name: create subnets for az apsouth1a
+        ec2_vpc_subnet:
+          state: present
+          tags:
+            Name: "{{item.1.subtags}}"
+          vpc_id: "{{item.1.subvpcid}}"
+          region: "{{item.1.subreg}}"
+          cidr: "{{item.1.subcidr}}"
+          az: "{{item.1.subaz}}"
+          map_public: "{{item.1.sumap_public}}"
+          resource_tags:
+            Name: "{{item.0.subnetname}}"
+        register: create_subnets_apsouth1a
+        with_subelements:
+          - "{{subnetsapsouth1a}}"
+          - configs
+
+      # Create subnet for ap-south-1b AZ
+      - name: create subnets for az apsouth1b
+        ec2_vpc_subnet:
+          state: present
+          tags:
+            Name: "{{item.1.subtags}}"
+          vpc_id: "{{item.1.subvpcid}}"
+          region: "{{item.1.subreg}}"
+          cidr: "{{item.1.subcidr}}"
+          az: "{{item.1.subaz}}"
+          map_public: "{{item.1.sumap_public}}" 
+          resource_tags:
+            Name: "{{item.0.subnetname}}"
+        register: create_subnets_apsouth1b
+        with_subelements:
+          - "{{subnetsapsouth1b}}"
+          - configs
+ 
+      # set facts
+      - name: set facts of subnet id's
+        set_fact: 
+          subnet_ids: "{{ subnet_ids | default({}) | combine({ item.subnet.tags.Name: item.subnet.id })  }}"
+        with_items: 
+          - "{{create_subnets_apsouth1a.results}}"
+          - "{{create_subnets_apsouth1b.results}}"
+
+
+      # debug set facts
+      - name: debug set facts of subnets
+        debug:
+          msg: "{{subnet_ids}}"
+
+      - name: create webserver sec groups
+        ec2_group:
+          name: "{{item.0.secgrpname}}"
+          description: "{{item.1.secgrpdesc}}"
+          region: "{{item.1.secregion}}"
+          vpc_id: "{{item.1.secvpcid}}"
+          rules:
+            - proto: tcp
+              from_port: 80
+              to_port: 80
+              cidr_ip: 0.0.0.0/0
+            - proto: tcp
+              from_port: 22
+              to_port: 22
+              cidr_ip: 0.0.0.0/0
+        register: webservers_group
+        with_subelements:
+          - "{{create_webserver_sec_groups}}"
+          - configurations
+
+
+      - name: set facts of webservers_group
+        set_fact:
+          apsouth1_secgrps: "{{ apsouth1_secgrps | default({}) | combine({item.group_name: item.group_id}) }}"
+        loop: "{{webservers_group.results}}"
+
+      - name: debugapsouth1_secgrps
+        debug:
+          msg: "{{item.key}} : {{item.value}}"
+        with_dict: "{{apsouth1_secgrps}}"
+
+
+      # copy var file all2.yaml to all3.yaml
+      - name: copy var file all2.yaml to all3.yaml
+        copy:
+          src: /etc/ansible/ap-south-1/group_vars/all2.yaml
+          dest: /etc/ansible/ap-south-1/group_vars/all3.yaml
+          follow: yes
+
+      # replace function
+      - name: replace subnet names with subnet id's in var file all3.yaml
+        replace:
+          path: /etc/ansible/ap-south-1/group_vars/all3.yaml
+          regexp: "{{ item.key }}"
+          replace: "{{ item.value }}"
+        with_dict: "{{ subnet_ids }}"
+
+      # replace function
+      - name: replace webserv sec grp names with sec grp ids in var file all3.yaml
+        replace:
+          path: /etc/ansible/ap-south-1/group_vars/all3.yaml
+          regexp: "{{ item.key }}"
+          replace: "{{ item.value }}"
+        with_dict: "{{ apsouth1_secgrps }}"
+      

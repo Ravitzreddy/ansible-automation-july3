@@ -1,0 +1,74 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: create network gateway for private subnet
+        ec2_vpc_nat_gateway:
+          subnet_id: "{{ item.1.ngsubnet }}"
+          region: "{{ item.1.ngregion }}"
+          wait: yes
+          if_exist_do_not_create: true
+        register: create_natgw
+        with_subelements:
+          - "{{ natgateways }}"
+          - configure 
+
+
+      - name: debug natgw
+        debug:
+          msg: "{{create_natgw}}"
+
+      - name: setfacts natworkgwid
+        set_fact:
+          natgw_id: "{{ natgw_id | default({}) | combine({item.item.0.natgatewayname: item.nat_gateway_id}) }}"
+        loop: "{{create_natgw.results}}"
+
+
+      # replace function
+      - name: replace NGW name with NGW id
+        replace:
+          path: /etc/ansible/ap-south-1/group_vars/all3.yaml
+          regexp: "{{ item.key }}"
+          replace: "{{ item.value }}"
+        with_dict: "{{ natgw_id }}"
+
+
+      - name: get mainroutes id to given vpcid
+        ec2_vpc_route_table_facts:
+          region: ap-south-1
+          filters:
+            vpc-id: "{{ item.1.ngrvpc }}"
+            "association.main": "true"
+        register: main_route
+        with_subelements:
+          - "{{ngw_routes}}"
+          - con
+
+      - name: debug main_route
+        debug:
+          msg: "{{main_route}}"
+
+      - name: setfacts to main_route
+        set_fact:
+          mainroute_vpcs: "{{ mainroute_vpcs | default({}) | combine({item.item[0].routename: item.route_tables[0].id }) }}"         
+        loop: "{{main_route.results}}"
+
+      # copy all3.yaml to all4.yaml
+      - name: copy all3 to all4
+        copy:
+          src: /etc/ansible/ap-south-1/group_vars/all3.yaml
+          dest: /etc/ansible/ap-south-1/group_vars/all4.yaml
+
+      # replace function
+      - name: replace natgateway names with nat gateway ids with VPC-ids
+        replace:
+          path: /etc/ansible/ap-south-1/group_vars/all4.yaml
+          regexp: "{{ item.key }}"
+          replace: "{{ item.value }}"
+        with_dict: "{{ mainroute_vpcs }}"
+      
+
+      # next run auto-ngw-route.yaml    
+      
+                      

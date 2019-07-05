@@ -1,0 +1,62 @@
+---
+  - hosts: localhost
+    connection: local
+    become: true
+    tasks:
+      - name: create instances for db servers
+        ec2:
+          key_name: "{{item.1.inskeyname}}"
+          instance_type: "{{item.1.instype}}"
+          image: "{{item.1.insimage}}"
+          region: "{{item.1.insregion}}"
+          group_id: "{{item.1.inssecgrp}}"
+          wait: yes
+          instance_tags: 
+            Name: "{{item.0.instname}}"
+            Publicip: "{{item.1.inspubiptag}}"
+            Privateip: "{{item.1.inspriiptag}}"
+          count: 1
+          count_tag:
+            application: dbservers
+          vpc_subnet_id: "{{item.1.insvpcsubnetid}}"
+          state: present
+        register: ec2_inst_db  
+        with_subelements:
+          - "{{crt_inst_db}}"
+          - configs
+
+      - name: debug
+        debug:
+          msg: "{{ec2_inst_db}}"
+
+      - name: setfactsget public ipaddresses of instances into dict
+        set_fact: 
+          dbprisubs_vpca_instances: "{{dbprisubs_vpca_instances | default({}) | combine({item.invocation.module_args.instance_tags.Name: item.instance_ids}) }}"
+          dbprisubs_vpca_pubips: "{{dbprisubs_vpca_pubips | default({}) | combine({item.invocation.module_args.instance_tags.Publicip: item.instances[0].public_ip}) }}"
+          dbprisubs_vpca_priips: "{{dbprisubs_vpca_priips | default({}) | combine({item.invocation.module_args.instance_tags.Privateip: item.instances[0].private_ip}) }}"
+
+        loop: "{{ec2_inst_db.results}}"
+
+      - name: debug prisubs_vpca_instances
+        debug:
+          msg: 
+            - "{{dbprisubs_vpca_instances}}"
+            - "{{dbprisubs_vpca_pubips}}"
+            - "{{dbprisubs_vpca_priips}}"
+      # copy all8.yaml to all9.yaml to assign public instances parametres from facts
+      - name: copy all8yaml to all9yaml
+        copy:
+          src: /etc/ansible/ap-south-1/group_vars/all8.yaml
+          dest: /etc/ansible/ap-south-1/group_vars/all9.yaml
+      # replace the keys and values from loops
+      - name: replace the keys and values from loops
+        replace:
+          path: /etc/ansible/ap-south-1/group_vars/all9.yaml
+          regexp: "{{ item.key }}"
+          replace: "{{ item.value }}/32"
+        with_dict:
+          - "{{dbprisubs_vpca_instances}}"
+          - "{{dbprisubs_vpca_pubips}}"
+          - "{{dbprisubs_vpca_priips}}"
+
+

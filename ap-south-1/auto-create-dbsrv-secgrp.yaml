@@ -11,12 +11,20 @@
           vpc_id: "{{item.1.secvpcid}}"
           rules:
             - proto: tcp
-              from_port: 80
-              to_port: 80
+              from_port: 3389
+              to_port: 3389
               cidr_ip: "{{item.1.sectarget1}}"
             - proto: tcp
-              from_port: 80
-              to_port: 80
+              from_port: 3389
+              to_port: 3389
+              cidr_ip: "{{item.1.sectarget2}}"
+            - proto: tcp
+              from_port: 3306
+              to_port: 3306
+              cidr_ip: "{{item.1.sectarget1}}"
+            - proto: tcp
+              from_port: 3306
+              to_port: 3306
               cidr_ip: "{{item.1.sectarget2}}"
             - proto: tcp
               from_port: 22
@@ -35,36 +43,36 @@
               from_port: 80
               to_port: 80
               cidr_ip: "{{item.1.sectarget2}}" 
-        register: appservers_group
+        register: dbservers_group
         with_subelements:
-          - "{{create_appserver_sec_groups}}"
+          - "{{create_dbserver_sec_groups}}"
           - configurations
 
 
-      - name: set facts of appservers_group
+      - name: set facts of dbservers_group
         set_fact:
-          apsouth1_appsecgrps: "{{ apsouth1_appsecgrps | default({}) | combine({item.group_name: item.group_id}) }}"
-        loop: "{{appservers_group.results}}"
+          apsouth1_dbsecgrps: "{{ apsouth1_dbsecgrps | default({}) | combine({item.group_name: item.group_id}) }}"
+        loop: "{{dbservers_group.results}}"
 
-      - name: debugapsouth1_appsecgrps
+      - name: debugapsouth1_dbsecgrps
         debug:
           msg: "{{item.key}} : {{item.value}}"
-        with_dict: "{{apsouth1_appsecgrps}}"
+        with_dict: "{{apsouth1_dbsecgrps}}"
 
 
-      # copy var file all5.yaml to all6.yaml
-      - name: copy var file all5.yaml to all6.yaml
+      # copy var file all7.yaml to all8.yaml
+      - name: copy var file all7.yaml to all8.yaml
         copy:
-          src: /etc/ansible/ap-south-1/group_vars/all5.yaml
-          dest: /etc/ansible/ap-south-1/group_vars/all6.yaml
+          src: /etc/ansible/ap-south-1/group_vars/all7.yaml
+          dest: /etc/ansible/ap-south-1/group_vars/all8.yaml
           follow: yes
 
 
       # replace function
-      - name: replace appebserv sec grp names with sec grp ids in var file all6.yaml
+      - name: replace dbwebserv sec grp names with sec grp ids in var file all8.yaml
         replace:
-          path: /etc/ansible/ap-south-1/group_vars/all6.yaml
+          path: /etc/ansible/ap-south-1/group_vars/all8.yaml
           regexp: "{{ item.key }}"
           replace: "{{ item.value }}"
-        with_dict: "{{ apsouth1_appsecgrps }}"
+        with_dict: "{{ apsouth1_dbsecgrps }}"
 

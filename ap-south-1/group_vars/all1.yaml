@@ -177,4 +177,47 @@
           sectarget1: INST1SUBPUB1VPCAPRIVATEIP
           sectarget2: INST2SUBPUB1VPCAPRIVATEIP 
     
- 
+  # create instance in appserver of subpri2 in vpca
+  crt_inst_app:
+    - instname: INST3-SUBPRI2-VPCA
+      configs:
+        - inskeyname: myprimeadmkeypair
+          instype: t2.micro
+          insimage: ami-5b673c34
+          insregion: ap-south-1
+          inssecgrp: appinst-vpca
+          instags: INSTANCESUBPRI2VPCA-INST2-SUBPRI2-VPCA
+          inspubiptag: INST3SUBPRI2VPCAPUBLICIP
+          inspriiptag: INST3SUBPRI2VPCAPRIVATEIP
+          inscount: 1
+          insvpcsubnetid: SUB2-PRI-VPCA
+          insasspubip: no
+
+  # Create sec groups to DB servers in vpca private subnets
+  create_dbserver_sec_groups:
+    - secgrpname: dbinst-vpca
+      configurations:
+        - secgrpdesc: sec grp for app servers for vpca
+          secvpcid: VPC-A
+          secregion: ap-south-1
+          sectarget1: INST3SUBPRI2VPCAPRIVATEIP
+          sectarget2: INST1SUBPUB1VPCAPRIVATEIP
+          sectarget3: INST2SUBPUB1VPCAPRIVATEIP
+
+
+  # create instance
+  crt_inst_db:
+    - instname: INST4-SUBPRI3-VPCA
+      configs:
+        - inskeyname: myprimeadmkeypair
+          instype: t2.micro
+          insimage: ami-5b673c34
+          insregion: ap-south-1
+          inssecgrp: dbinst-vpca
+          instags: INSTANCESUBPRI3VPCA-INST4-SUBPRI3-VPCA
+          inspubiptag: INST4SUBPRI3VPCAPUBLICIP
+          inspriiptag: INST4SUBPRI3VPCAPRIVATEIP
+          inscount: 1
+          insvpcsubnetid: SUB3-PRI-VPCA
+          insasspubip: no
+

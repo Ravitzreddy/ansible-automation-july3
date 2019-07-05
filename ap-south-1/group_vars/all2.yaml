@@ -1,11 +1,11 @@
 ---
   vpcs:
-    - vpcname: vpc-063cfba6d41d13fa5
+    - vpcname: vpc-034155cda99fd517f
       configurations:
         - vpccidr: 10.0.0.0/16
           vpcregion: ap-south-1
           IGW: yes
-    - vpcname: vpc-0319564ed34c84e9a
+    - vpcname: vpc-02d706c27e5510f0e
       configurations:
         - vpccidr: 10.1.0.0/16
           vpcregion: ap-south-1
@@ -17,7 +17,7 @@
         - subcidr: 10.0.1.0/24
           subaz: ap-south-1a
           subreg: ap-south-1
-          subvpcid: vpc-063cfba6d41d13fa5
+          subvpcid: vpc-034155cda99fd517f
           subtags: publicsubnet-vpc1
           sumap_public: yes
     - subnetname: SUB2-PRI-VPCA
@@ -25,7 +25,7 @@
         - subcidr: 10.0.2.0/24
           subaz: ap-south-1a
           subreg: ap-south-1
-          subvpcid: vpc-063cfba6d41d13fa5
+          subvpcid: vpc-034155cda99fd517f
           subtags: privatesubnet-vpc1
           sumap_public: no
     - subnetname: SUB3-PRI-VPCA
@@ -33,7 +33,7 @@
         - subcidr: 10.0.3.0/24
           subaz: ap-south-1a
           subreg: ap-south-1
-          subvpcid: vpc-063cfba6d41d13fa5
+          subvpcid: vpc-034155cda99fd517f
           subtags: privatesubnet-vpc1
           sumap_public: no
     - subnetname: SUB4-PRI-VPCB
@@ -41,7 +41,7 @@
         - subcidr: 10.1.1.0/24
           subaz: ap-south-1a
           subreg: ap-south-1
-          subvpcid: vpc-0319564ed34c84e9a
+          subvpcid: vpc-02d706c27e5510f0e
           subtags: privatesubnet-vpc2
           sumap_public: no
     - subnetname: SUB6-PUB-VPCB
@@ -49,7 +49,7 @@
         - subcidr: 10.1.2.0/24
           subaz: ap-south-1a
           subreg: ap-south-1
-          subvpcid: vpc-0319564ed34c84e9a
+          subvpcid: vpc-02d706c27e5510f0e
           subtags: publicsubnet-vpc2
           sumap_public: no
         
@@ -59,7 +59,7 @@
         - subcidr: 10.0.5.0/24
           subaz: ap-south-1b
           subreg: ap-south-1
-          subvpcid: vpc-063cfba6d41d13fa5
+          subvpcid: vpc-034155cda99fd517f
           subtags: publicsubnet-vpc1
           sumap_public: yes
 
@@ -67,22 +67,22 @@
   igw_routes:
     - routename: SUB1-PUBL-VPCA-IGW
       confs:
-        - igrvpc: vpc-063cfba6d41d13fa5
+        - igrvpc: vpc-034155cda99fd517f
           igrregion: ap-south-1
           igrsubnet: SUB1-PUB-VPCA
-          igrgatewayid: igw-0c28fc929ce2aa0d0
+          igrgatewayid: igw-02b73b86128dd48d8
     - routename: SUB5-PUBL-VPCA-IGW
       confs:
-        - igrvpc: vpc-063cfba6d41d13fa5
+        - igrvpc: vpc-034155cda99fd517f
           igrregion: ap-south-1
           igrsubnet: SUB5-PUB-VPCA
-          igrgatewayid: igw-0c28fc929ce2aa0d0
+          igrgatewayid: igw-02b73b86128dd48d8
     - routename: SUB6-PUBL-VPCB-IGW
       confs:
-        - igrvpc: vpc-0319564ed34c84e9a
+        - igrvpc: vpc-02d706c27e5510f0e
           igrregion: ap-south-1
           igrsubnet: SUB6-PUB-VPCB
-          igrgatewayid: igw-0c18e5eece4f83925
+          igrgatewayid: igw-082fc72a85a1cf41b
 
 
   # variables for nat gateway to DB subnet SUB3-PRI-VPCA
@@ -101,7 +101,7 @@
   ngw_routes:
     - routename: SUB3-PRI-VPC--A-NATROUTE
       con:
-        - ngrvpc: vpc-063cfba6d41d13fa5
+        - ngrvpc: vpc-034155cda99fd517f
           ngrvpccidr: 10.0.0.0/16
           ngrregion: ap-south-1
           ngrsubnet: SUB3-PRI-VPCA
@@ -109,7 +109,7 @@
           ngrrouteid: SUB3-PRI-VPC--A-NATROUTE
     - routename: SUB4-PRI-VPC--B-NATROUTE
       con:
-        - ngrvpc: vpc-0319564ed34c84e9a
+        - ngrvpc: vpc-02d706c27e5510f0e
           ngrvpccidr: 10.1.0.0/16
           ngrregion: ap-south-1
           ngrsubnet: SUB4-PRI-VPCB
@@ -121,12 +121,12 @@
     - secgrpname: webinst-vpca
       configurations:
         - secgrpdesc: sec grp for web servers for vpca
-          secvpcid: vpc-063cfba6d41d13fa5
+          secvpcid: vpc-034155cda99fd517f
           secregion: ap-south-1
     - secgrpname: webinst-vpcb
       configurations:
         - secgrpdesc: sec grp for web servers for vpcb
-          secvpcid: vpc-0319564ed34c84e9a
+          secvpcid: vpc-02d706c27e5510f0e
           secregion: ap-south-1
   # create keyair for ap-south-1 region
   #createkeypair:
@@ -148,6 +148,8 @@
           insregion: ap-south-1
           inssecgrp: webinst-vpca
           instags: INSTANCESUBPUB1VPCA-INST1-SUBPUB1-VPCA
+          inspubiptag: INST1SUBPUB1VPCAPUBLICIP
+          inspriiptag: INST1SUBPUB1VPCAPRIVATEIP
           inscount: 1
           insvpcsubnetid: SUB1-PUB-VPCA
           insasspubip: yes
@@ -159,9 +161,63 @@
           insregion: ap-south-1
           inssecgrp: webinst-vpca
           instags: INSTANCESUBPUB1VPCA-INST2-SUBPUB5-VPCA
+          inspubiptag: INST2SUBPUB1VPCAPUBLICIP
+          inspriiptag: INST2SUBPUB1VPCAPRIVATEIP
           inscount: 1
           insvpcsubnetid: SUB5-PUB-VPCA
           insasspubip: yes
      
+  # Create sec groups to app servers in vpca private subnets
+  create_appserver_sec_groups:
+    - secgrpname: appinst-vpca
+      configurations:
+        - secgrpdesc: sec grp for app servers for vpca
+          secvpcid: vpc-034155cda99fd517f
+          secregion: ap-south-1
+          sectarget1: INST1SUBPUB1VPCAPRIVATEIP
+          sectarget2: INST2SUBPUB1VPCAPRIVATEIP 
+    
+  # create instance in appserver of subpri2 in vpca
+  crt_inst_app:
+    - instname: INST3-SUBPRI2-VPCA
+      configs:
+        - inskeyname: myprimeadmkeypair
+          instype: t2.micro
+          insimage: ami-5b673c34
+          insregion: ap-south-1
+          inssecgrp: appinst-vpca
+          instags: INSTANCESUBPRI2VPCA-INST2-SUBPRI2-VPCA
+          inspubiptag: INST3SUBPRI2VPCAPUBLICIP
+          inspriiptag: INST3SUBPRI2VPCAPRIVATEIP
+          inscount: 1
+          insvpcsubnetid: SUB2-PRI-VPCA
+          insasspubip: no
 
-  
+  # Create sec groups to DB servers in vpca private subnets
+  create_dbserver_sec_groups:
+    - secgrpname: dbinst-vpca
+      configurations:
+        - secgrpdesc: sec grp for app servers for vpca
+          secvpcid: vpc-034155cda99fd517f
+          secregion: ap-south-1
+          sectarget1: INST3SUBPRI2VPCAPRIVATEIP
+          sectarget2: INST1SUBPUB1VPCAPRIVATEIP
+          sectarget3: INST2SUBPUB1VPCAPRIVATEIP
+
+
+  # create instance
+  crt_inst_db:
+    - instname: INST4-SUBPRI3-VPCA
+      configs:
+        - inskeyname: myprimeadmkeypair
+          instype: t2.micro
+          insimage: ami-5b673c34
+          insregion: ap-south-1
+          inssecgrp: dbinst-vpca
+          instags: INSTANCESUBPRI3VPCA-INST4-SUBPRI3-VPCA
+          inspubiptag: INST4SUBPRI3VPCAPUBLICIP
+          inspriiptag: INST4SUBPRI3VPCAPRIVATEIP
+          inscount: 1
+          insvpcsubnetid: SUB3-PRI-VPCA
+          insasspubip: no
+
